@@ -1,73 +1,53 @@
-# React + TypeScript + Vite
+# Sistema de Gestión de Peluquerías (PROYECT-BARBER)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este es un proyecto para la gestión integral de barberías, permitiendo a los locales administrar sus servicios y profesionales, y a los clientes reservar turnos de manera sencilla.
 
-Currently, two official plugins are available:
+## 🚀 Tecnologías
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+El proyecto está construido con las siguientes tecnologías:
 
-## React Compiler
+- **Frontend:** [React](https://reactjs.org/) con [TypeScript](https://www.typescriptlang.org/) y [Vite](https://vitejs.dev/) para un desarrollo rápido y tipado seguro.
+- **Backend/Base de Datos:** [Firebase](https://firebase.google.com/) (Firestore para datos y Auth para usuarios).
+- **Despliegue:** [Firebase Hosting](https://firebase.google.com/docs/hosting).
+- **Rutas:** [React Router Dom](https://reactrouter.com/) para la navegación entre páginas.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 📂 Estructura del Proyecto
 
-## Expanding the ESLint configuration
+He organizado el código de forma modular para que sea fácil de mantener:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- `src/components`: Componentes reutilizables de la interfaz.
+- `src/pages`: Pantallas principales de la aplicación.
+- `src/services`: Configuración de servicios externos (Firebase).
+- `src/hooks`: Lógica personalizada reutilizable.
+- `src/styles`: Archivos de estilos globales y modulares.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## ✅ Sprint 1: Configuración Inicial (Completado)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+En la primera etapa del proyecto he logrado:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- [x] Inicialización del proyecto con Vite y TypeScript.
+- [x] Configuración de la estrategia de ramas en Git (`main`, `testing`, `development`).
+- [x] Conexión y configuración de Firebase (Auth, Firestore y Analytics).
+- [x] Habilitación de métodos de autenticación (Email/Password y Google).
+- [x] Configuración inicial para el despliegue en Firebase Hosting.
+- [x] Vinculación con el repositorio oficial en GitHub.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🛠️ Cómo ejecutar el proyecto
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1. **Instalar dependencias:**
+   ```bash
+   npm install
+   ```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+2. **Ejecutar en modo desarrollo:**
+   ```bash
+   npm run dev
+   ```
+
+3. **Construir para producción:**
+   ```bash
+   npm run build
+   ```
+
+---
+Proyecto creado por **garabato87**
