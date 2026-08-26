@@ -12,7 +12,8 @@
   --header-height: 76px;
   
   /* Font */
-  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-main: 'Work Sans', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Outfit', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
 

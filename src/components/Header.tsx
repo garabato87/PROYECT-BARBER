@@ -1,6 +1,7 @@
-import React from 'react';
-import { Sun, Moon, Bell, Search } from 'lucide-react';
+import { Sun, Moon, Bell, Search, LogOut } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
+import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import './Header.css';
 
 interface HeaderProps {
@@ -9,6 +10,13 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ title }) => {
   const { theme, toggleTheme } = useTheme();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <header className="header">
@@ -29,6 +37,9 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
           title={theme === 'light' ? 'Activar Modo Oscuro' : 'Activar Modo Claro'}
         >
           {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+        </button>
+        <button className="icon-button" onClick={handleLogout} title="Cerrar Sesión">
+          <LogOut size={20} />
         </button>
       </div>
     </header>

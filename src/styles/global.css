@@ -65,6 +65,7 @@ img {
 
 /* Typography Helpers */
 h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
   font-weight: 700;
   line-height: 1.2;
   margin-bottom: 0.5rem;
@@ -77,4 +78,17 @@ h1, h2, h3, h4, h5, h6 {
 
 .accent-text {
   color: var(--accent);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes animate-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: animate-slide-up 0.3s ease both;
 }

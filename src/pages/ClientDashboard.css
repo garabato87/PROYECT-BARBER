@@ -1,0 +1,48 @@
+.client-dashboard { max-width: 900px; margin: 0 auto; }
+.dashboard-header { margin-bottom: 50px; }
+.dashboard-header h1 { font-size: 2.8rem; font-weight: 800; margin: 0; color: var(--text-primary); letter-spacing: -1px; }
+.dashboard-header p { color: var(--text-muted); font-size: 1.1rem; margin-top: 8px; }
+.appointment-list { display: flex; flex-direction: column; gap: 20px; }
+.appointment-card { background: var(--bg-primary); border-radius: var(--border-radius-md); overflow: hidden; transition: var(--transition-speed); border: 1px solid var(--border); }
+.appointment-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); border-color: var(--text-muted); }
+.card-main { display: flex; padding: 25px; gap: 25px; }
+.date-box { background: var(--bg-secondary); padding: 15px; border-radius: var(--border-radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 85px; border: 1px solid var(--glass-border); }
+.date-box .day { font-size: 2.2rem; font-weight: 800; line-height: 1; color: var(--accent); }
+.date-box .month { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
+.details { flex: 1; }
+.details h3 { margin: 0 0 15px 0; font-size: 1.4rem; font-weight: 700; color: var(--text-primary); }
+.info-row { display: flex; gap: 10px; margin-bottom: 8px; font-size: 0.95rem; }
+.info-label { font-weight: 600; color: var(--text-muted); min-width: 70px; }
+.info-value { color: var(--text-primary); font-weight: 500; }
+.card-footer { background: var(--bg-secondary); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--glass-border); }
+.status-pill { padding: 6px 14px; border-radius: var(--border-radius-full); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.status-pill.pending { background: rgba(245, 158, 11, 0.15); color: #d97706; }
+.status-pill.completed { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+.status-pill.cancelled { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+.cancel-btn { background: transparent; border: 1.5px solid var(--danger); color: var(--danger); padding: 8px 18px; border-radius: var(--border-radius-sm); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: var(--transition-speed); }
+.cancel-btn:hover { background: var(--danger); color: white; }
+.btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text-primary); }
+.btn-danger { background: #ef4444; border: none; color: white; }
+.btn-danger:hover { background: #dc2626; }
+.empty-state { text-align: center; padding: 80px 20px; background: var(--surface); border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--glass-border); }
+.empty-icon { font-size: 4rem; margin-bottom: 20px; color: var(--text-muted); }
+.book-now-btn { margin-top: 1.5rem; background: var(--text-primary); color: var(--bg-primary); border: none; padding: 12px 28px; border-radius: var(--border-radius-full); font-weight: 700; font-size: 1rem; cursor: pointer; transition: opacity 0.2s; }
+.book-now-btn:hover { opacity: 0.9; }
+.tabs-container { display: flex; gap: 12px; margin-bottom: 24px; }
+.tab-btn { position: relative; background: transparent; border: none; padding: 10px 24px; color: var(--text-secondary); font-weight: 600; cursor: pointer; z-index: 1; }
+.tab-btn.active { color: var(--bg-primary); background: transparent; border: none; }
+.tab-indicator { position: absolute; inset: 0; background: var(--text-primary); border-radius: var(--border-radius-full); z-index: -1; }
+.tab-label { position: relative; z-index: 2; }
+.action-menu-container { position: relative; display: flex; align-items: flex-start; margin-left: auto; }
+.icon-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 8px; border-radius: 50%; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
+.icon-btn:hover { background: var(--bg-secondary); color: var(--text-primary); }
+.action-dropdown { position: absolute; top: 40px; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--border-radius-md); box-shadow: var(--shadow-md); padding: 8px; min-width: 160px; z-index: 10; }
+.cancel-action { width: 100%; text-align: left; background: transparent; border: none; color: var(--danger); padding: 10px 16px; font-weight: 600; border-radius: var(--border-radius-sm); cursor: pointer; transition: background 0.2s; }
+.cancel-action:hover { background: rgba(239, 68, 68, 0.1); }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal-content { background: var(--surface); padding: 30px; border-radius: var(--border-radius-lg); max-width: 400px; width: 90%; text-align: center; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-header h3 { margin: 0; font-size: 1.5rem; }
+.modal-actions { display: flex; gap: 16px; margin-top: 24px; }
+.modal-actions button { flex: 1; padding: 12px; border-radius: var(--border-radius-md); font-weight: 600; cursor: pointer; }
+@media (max-width: 480px) { .card-main { flex-direction: column; align-items: flex-start; } }
