@@ -71,9 +71,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const diffMs = appDateUTC.getTime() - now.getTime();
         const diffHours = diffMs / (1000 * 60 * 60);
 
-        // Si falta entre 0 y 12.5 horas para el turno, enviamos el mail
-        // (usamos 12.5 porque el cron se ejecuta cada 1 hora)
-        if (diffHours > 0 && diffHours <= 12.5) {
+        // Si falta entre 0 y 36 horas para el turno, enviamos el mail
+        // (Como Vercel gratuito solo nos deja correr el cron 1 vez al día, escaneamos todo lo de "mañana")
+        if (diffHours > 0 && diffHours <= 36) {
           
           const htmlContent = `
             <div style="font-family: sans-serif; padding: 20px;">
