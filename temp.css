@@ -1,0 +1,27 @@
+
+/* --- Filtros --- */
+.sa-filters-row { 
+  display: flex; 
+  gap: 1rem; 
+  align-items: center; 
+}
+.sa-role-select { 
+  background: var(--bg-secondary); 
+  color: var(--text-primary); 
+  border: 1px solid rgba(255,255,255,0.1); 
+  border-radius: 8px; 
+  padding: 0.4rem 0.8rem; 
+  font-size: 0.85rem; 
+  outline: none; 
+}
+
+@media (max-width: 640px) {
+  .sa-panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .sa-filters-row {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

@@ -1,5 +1,9 @@
 @import './variables.css';
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
   margin: 0;
   padding: 0;
@@ -33,7 +37,11 @@ button {
   cursor: pointer;
   border: none;
   background: none;
-  outline: none;
+}
+
+*:focus-visible {
+  outline: 3px solid var(--focus-ring, var(--accent, #17202E));
+  outline-offset: 2px;
 }
 
 ul {
@@ -72,7 +80,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .text-muted {
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-size: 0.875rem;
 }
 

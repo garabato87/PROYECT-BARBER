@@ -1,14 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import Layout from '../components/Layout';
+import ExploreLayout from '../components/ExploreLayout';
+import { Camera, Loader2, LogOut } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const ProfilePage: React.FC = () => {
   const { user, updateProfile, logout } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name ?? '',
     phone: user?.phone ?? '',
@@ -38,164 +43,198 @@ const ProfilePage: React.FC = () => {
     navigate('/login');
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Frontend Validations
+    if (!file.type.startsWith('image/')) {
+      setError('Solo se permiten archivos de imagen.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('La imagen no debe superar los 5MB.');
+      return;
+    }
+
+    setIsUploading(true);
+    setError('');
+    setSuccess('');
+    try {
+      // Cloudinary Upload Logic
+      const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+      if (!cloudName || !uploadPreset) {
+        throw new Error("Faltan las credenciales de Cloudinary en el archivo .env.local");
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', uploadPreset);
+
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al subir a Cloudinary');
+      }
+
+      const data = await response.json();
+      const photoURL = data.secure_url;
+
+      // Update Firestore Profile with the Cloudinary URL
+      await updateProfile({ photoURL });
+      setSuccess('Foto de perfil actualizada.');
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Error al subir la imagen. Verifica tu conexión e intentá de nuevo.');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
-    <Layout title="Mi Perfil">
-      <div className="animate-slide-up" style={{ maxWidth: '600px' }}>
-        <div style={{
-          background: 'var(--surface)',
-          padding: '2rem',
-          borderRadius: 'var(--border-radius-lg)',
-          border: '1px solid var(--border)',
-          boxShadow: 'var(--shadow-md)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '2rem' }}>
-            <div style={{
-              width: '72px',
-              height: '72px',
-              borderRadius: '50%',
-              background: 'var(--accent)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '2rem',
-              color: '#fff',
-              fontWeight: 700,
-            }}>
-              {user?.name.charAt(0).toUpperCase()}
+    <ExploreLayout title="Mi Perfil">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 w-full">
+        
+        {/* Profile Card */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-surface border border-glass-border rounded-2xl p-6 sm:p-8 shadow-sm mb-6"
+        >
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8 text-center sm:text-left">
+            
+            {/* Avatar Section */}
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-full bg-accent/10 flex items-center justify-center text-3xl text-accent font-black overflow-hidden border-2 border-accent/20">
+                {isUploading ? (
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                ) : user?.photoURL ? (
+                  <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  user?.name.charAt(0).toUpperCase()
+                )}
+              </div>
+              
+              <button 
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="absolute bottom-0 right-0 p-2 bg-accent text-on-primary rounded-full shadow-lg hover:scale-105 transition-transform disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                <Camera size={16} />
+              </button>
+              <input 
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+              />
             </div>
-            <div>
-              <h3 style={{ margin: 0 }}>{user?.name}</h3>
-              <p className="text-muted" style={{ margin: '4px 0 0 0', fontSize: '0.875rem' }}>{user?.email}</p>
-              <span style={{
-                display: 'inline-block',
-                marginTop: '6px',
-                padding: '2px 10px',
-                borderRadius: '20px',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                background: 'rgba(64,192,87,0.1)',
-                color: 'var(--success)',
-              }}>
+            
+            {/* User Info */}
+            <div className="flex-1 mt-2">
+              <h3 className="text-2xl font-bold text-foreground m-0">{user?.name}</h3>
+              <p className="text-text-secondary mt-1">{user?.email}</p>
+              <span className="inline-block mt-3 px-3 py-1 rounded-full text-xs font-bold bg-success/10 text-success uppercase tracking-wider">
                 {user?.role}
               </span>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.875rem', fontWeight: 600 }}>Nombre completo</label>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-semibold text-foreground">Nombre completo</label>
               <input
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
                 required
                 disabled={isSubmitting}
-                style={{
-                  padding: '0.75rem 1rem',
-                  borderRadius: 'var(--border-radius-md)',
-                  border: '1px solid var(--border)',
-                  background: 'var(--bg-primary)',
-                  color: 'var(--text-primary)',
-                  fontSize: '1rem',
-                }}
+                className="px-4 py-3 rounded-lg border border-glass-border bg-bg-primary text-foreground focus:ring-2 focus:ring-accent focus:outline-none transition-all"
               />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.875rem', fontWeight: 600 }}>Teléfono</label>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-semibold text-foreground">Teléfono</label>
               <input
                 name="phone"
                 type="tel"
                 value={formData.phone}
                 onChange={handleChange}
                 disabled={isSubmitting}
-                style={{
-                  padding: '0.75rem 1rem',
-                  borderRadius: 'var(--border-radius-md)',
-                  border: '1px solid var(--border)',
-                  background: 'var(--bg-primary)',
-                  color: 'var(--text-primary)',
-                  fontSize: '1rem',
-                }}
+                className="px-4 py-3 rounded-lg border border-glass-border bg-bg-primary text-foreground focus:ring-2 focus:ring-accent focus:outline-none transition-all"
               />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.875rem', fontWeight: 600 }}>Email</label>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-semibold text-foreground">Email</label>
               <input
                 value={user?.email ?? ''}
                 disabled
-                style={{
-                  padding: '0.75rem 1rem',
-                  borderRadius: 'var(--border-radius-md)',
-                  border: '1px solid var(--border)',
-                  background: 'var(--bg-primary)',
-                  color: 'var(--text-primary)',
-                  opacity: 0.6,
-                  fontSize: '1rem',
-                }}
+                className="px-4 py-3 rounded-lg border border-glass-border bg-bg-primary/50 text-text-muted cursor-not-allowed"
               />
-              <span className="text-muted" style={{ fontSize: '0.8rem' }}>El email no se puede modificar.</span>
+              <span className="text-xs text-text-secondary">El email no se puede modificar.</span>
             </div>
 
             {error && (
-              <p style={{ color: '#e53e3e', background: '#fff5f5', border: '1px solid #fc8181', borderRadius: '6px', padding: '10px 14px', margin: 0, fontSize: '0.875rem' }}>
+              <div className="bg-danger/10 border border-danger/20 text-danger px-4 py-3 rounded-lg text-sm font-medium">
                 {error}
-              </p>
+              </div>
             )}
             {success && (
-              <p style={{ color: '#276749', background: '#f0fff4', border: '1px solid #9ae6b4', borderRadius: '6px', padding: '10px 14px', margin: 0, fontSize: '0.875rem' }}>
+              <div className="bg-success/10 border border-success/20 text-success px-4 py-3 rounded-lg text-sm font-medium">
                 {success}
-              </p>
+              </div>
             )}
 
             <button
               type="submit"
               disabled={isSubmitting}
-              style={{
-                padding: '0.75rem 1.5rem',
-                borderRadius: 'var(--border-radius-md)',
-                background: 'var(--accent)',
-                color: '#fff',
-                fontWeight: 600,
-                width: 'fit-content',
-                opacity: isSubmitting ? 0.6 : 1,
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
-              }}
+              className="mt-2 px-6 py-3 rounded-lg bg-accent text-on-primary font-semibold shadow-glow hover:bg-accent-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto self-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
             >
-              {isSubmitting ? 'Guardando...' : 'Guardar cambios'}
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 size={18} className="animate-spin" /> Guardando...
+                </span>
+              ) : (
+                'Guardar cambios'
+              )}
             </button>
           </form>
-        </div>
+        </motion.div>
 
-        <div style={{
-          marginTop: '1.5rem',
-          background: 'var(--surface)',
-          padding: '1.5rem',
-          borderRadius: 'var(--border-radius-lg)',
-          border: '1px solid var(--border)',
-        }}>
-          <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--danger)' }}>Cerrar Sesión</h4>
-          <p className="text-muted" style={{ margin: '0 0 1rem 0', fontSize: '0.875rem' }}>
-            Se cerrará tu sesión en este dispositivo.
+        {/* Danger Zone */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-surface border border-danger/20 rounded-2xl p-6 sm:p-8"
+        >
+          <h4 className="text-lg font-bold text-danger mb-2 flex items-center gap-2">
+            <LogOut size={20} />
+            Cerrar Sesión
+          </h4>
+          <p className="text-sm text-text-secondary mb-6">
+            Se cerrará tu sesión activa en este dispositivo de forma segura.
           </p>
           <button
             onClick={handleLogout}
-            style={{
-              padding: '0.75rem 1.5rem',
-              borderRadius: 'var(--border-radius-md)',
-              background: 'transparent',
-              color: 'var(--danger)',
-              border: '1px solid var(--danger)',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
+            className="px-6 py-2.5 rounded-lg border border-danger text-danger font-semibold hover:bg-danger hover:text-white transition-colors"
           >
             Cerrar sesión
           </button>
-        </div>
+        </motion.div>
       </div>
-    </Layout>
+    </ExploreLayout>
   );
 };
 

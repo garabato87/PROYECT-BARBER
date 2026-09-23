@@ -11,7 +11,7 @@
   gap: 1.5rem;
   margin-bottom: 2.5rem;
   padding-bottom: 2rem;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid var(--border);
   animation: saFadeUp 0.6s cubic-bezier(0.16,1,0.3,1) both;
 }
 
@@ -32,7 +32,7 @@
 .sa-header-title {
   font-size: clamp(1.75rem, 3vw, 2.5rem);
   font-weight: 800;
-  color: #f8fafc;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
   line-height: 1.1;
   margin-bottom: 0.5rem;
@@ -47,7 +47,7 @@
 
 .sa-header-sub {
   font-size: 0.875rem;
-  color: #475569;
+  color: var(--text-muted);
   max-width: 480px;
 }
 
@@ -93,8 +93,8 @@
 }
 
 .sa-stat-card {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 1.5rem;
   display: flex;
@@ -106,7 +106,7 @@
 
 .sa-stat-card:hover {
   border-color: rgba(251,191,36,0.15);
-  background: rgba(255,255,255,0.04);
+  background: var(--bg-secondary);
   transform: translateY(-2px);
 }
 
@@ -176,8 +176,8 @@
 
 /* ─── Panel Base ─────────────────────────────────────────── */
 .sa-panel {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 14px;
   overflow: hidden;
   animation: saFadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.15s both;
@@ -189,13 +189,13 @@
   align-items: center;
   gap: 1rem;
   padding: 1.125rem 1.5rem;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid var(--border);
 }
 
 .sa-panel-title {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 /* ─── Search ─────────────────────────────────────────────── */
@@ -203,17 +203,17 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0.5rem 0.875rem;
-  color: #475569;
+  color: var(--text-muted);
   transition: border-color 0.2s;
 }
 
 .sa-search-box:focus-within {
   border-color: rgba(251,191,36,0.3);
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .sa-search-box input {
@@ -221,7 +221,7 @@
   border: none;
   outline: none;
   font-size: 0.85rem;
-  color: #f8fafc;
+  color: var(--text-primary);
   font-family: inherit;
   width: 180px;
 }
@@ -241,24 +241,24 @@
   padding: 0.875rem 1.5rem;
   font-size: 0.72rem;
   font-weight: 700;
-  color: #475569;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  background: rgba(255,255,255,0.02);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
 
 .sa-table td {
   padding: 1rem 1.5rem;
   font-size: 0.9rem;
-  color: #cbd5e1;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
 
 .sa-table tr:last-child td { border-bottom: none; }
-.sa-table tbody tr:hover td { background: rgba(255,255,255,0.02); }
+.sa-table tbody tr:hover td { background: var(--bg-secondary); }
 
 .sa-row-warning td { background: rgba(245,158,11,0.03); }
 .sa-row-warning td:first-child { border-left: 2px solid rgba(245,158,11,0.35); }
@@ -271,11 +271,11 @@
 
 .sa-shop-emoji { font-size: 1.15rem; line-height: 1; flex-shrink: 0; }
 
-.sa-shop-cell strong { color: #f8fafc; font-weight: 600; display: block; }
+.sa-shop-cell strong { color: var(--text-primary); font-weight: 600; display: block; }
 
 .sa-shop-address {
   font-size: 0.78rem;
-  color: #475569;
+  color: var(--text-muted);
   margin-top: 2px;
 }
 
@@ -325,9 +325,9 @@
 .sa-action-btn {
   padding: 0.4rem 0.875rem;
   border-radius: 7px;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
   background: transparent;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
@@ -337,9 +337,9 @@
 }
 
 .sa-action-btn:hover {
-  background: rgba(255,255,255,0.06);
+  background: var(--border);
   border-color: rgba(255,255,255,0.14);
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .sa-action-btn.danger { color: #f87171; border-color: rgba(239,68,68,0.2); }
@@ -372,13 +372,13 @@
   font-size: 0.875rem;
 }
 
-.sa-category-name { color: #94a3b8; }
-.sa-category-count { color: #f8fafc; font-weight: 700; font-size: 0.85rem; }
+.sa-category-name { color: var(--text-muted); }
+.sa-category-count { color: var(--text-primary); font-weight: 700; font-size: 0.85rem; }
 
 .sa-category-track {
   height: 3px;
   border-radius: 2px;
-  background: rgba(255,255,255,0.06);
+  background: var(--border);
   overflow: hidden;
 }
 
@@ -402,7 +402,7 @@
   align-items: center;
   font-size: 0.875rem;
   padding: 0.75rem 0;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--border);
 }
 
 .sa-health-row:last-child { border-bottom: none; }
@@ -410,7 +410,7 @@
 
 .sa-health-value {
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 /* ─── User cell ─────────────────────────────────────────── */
@@ -459,8 +459,8 @@
 .sa-role-option {
   padding: 0.3rem 0.7rem;
   border-radius: 6px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  background: var(--surface);
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
@@ -527,7 +527,7 @@
 
 .sa-chart-label {
   font-size: 0.72rem;
-  color: #475569;
+  color: var(--text-muted);
   font-weight: 500;
   flex-shrink: 0;
 }
@@ -545,4 +545,31 @@
   .sa-side         { grid-template-columns: 1fr; }
   .sa-reports-side { grid-template-columns: 1fr; }
   .sa-search-box input { width: 120px; }
+}
+
+/* --- Filtros --- */
+.sa-filters-row { 
+  display: flex; 
+  gap: 1rem; 
+  align-items: center; 
+}
+.sa-role-select { 
+  background: var(--bg-secondary); 
+  color: var(--text-primary); 
+  border: 1px solid rgba(255,255,255,0.1); 
+  border-radius: 8px; 
+  padding: 0.4rem 0.8rem; 
+  font-size: 0.85rem; 
+  outline: none; 
+}
+
+@media (max-width: 640px) {
+  .sa-panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .sa-filters-row {
+    width: 100%;
+    justify-content: space-between;
+  }
 }

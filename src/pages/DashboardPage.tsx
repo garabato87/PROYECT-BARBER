@@ -1,82 +1,112 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { Calendar, Scissors, Users } from 'lucide-react';
+import { Calendar, Scissors, Users, Loader2 } from 'lucide-react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../services/firebase';
+import { useAuth } from '../hooks/useAuth';
+import { motion } from 'framer-motion';
 
 const DashboardPage: React.FC = () => {
+  const { user } = useAuth();
+  const [statsData, setStatsData] = useState({ appointments: 0, services: 0, professionals: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!user?.barbershopId) return;
+
+      try {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const formattedDate = `${yyyy}-${mm}-${dd}`;
+
+        // Citas Hoy
+        const appointmentsQ = query(
+          collection(db, 'businesses', user.barbershopId, 'appointments'),
+          where('date', '==', formattedDate),
+          where('status', 'in', ['pending', 'confirmed'])
+        );
+        const appsSnap = await getDocs(appointmentsQ);
+        
+        // Servicios Activos
+        const servicesQ = query(collection(db, 'businesses', user.barbershopId, 'services'));
+        const srvSnap = await getDocs(servicesQ);
+
+        // Profesionales Activos
+        const professionalsQ = query(
+          collection(db, 'businesses', user.barbershopId, 'professionals'),
+          where('isActive', '==', true)
+        );
+        const proSnap = await getDocs(professionalsQ);
+
+        setStatsData({
+          appointments: appsSnap.size,
+          services: srvSnap.size,
+          professionals: proSnap.size
+        });
+      } catch (error) {
+        console.error("Error al obtener datos del dashboard:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [user]);
+
   const stats = [
-    { label: 'Citas Hoy', value: '12', icon: Calendar, color: 'var(--accent)' },
-    { label: 'Servicios Activos', value: '8', icon: Scissors, color: 'var(--success)' },
-    { label: 'Equipo', value: '4', icon: Users, color: 'var(--danger)' },
+    { label: 'Citas Hoy', value: statsData.appointments, icon: Calendar, color: 'text-accent', bg: 'bg-accent/10' },
+    { label: 'Servicios Activos', value: statsData.services, icon: Scissors, color: 'text-success', bg: 'bg-success/10' },
+    { label: 'Equipo', value: statsData.professionals, icon: Users, color: 'text-text-secondary', bg: 'bg-glass-border' },
   ];
 
   return (
     <Layout title="Dashboard">
-      <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-        <h2 style={{ fontSize: '2rem', letterSpacing: '-0.5px' }}>Bienvenido al Sistema de Gestión</h2>
-        <p className="text-muted" style={{ fontSize: '1.1rem', marginTop: '0.5rem' }}>
-          Aquí tendrás un resumen de tu actividad diaria.
-        </p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h2 className="text-3xl font-black text-foreground tracking-tight mb-2">
+            Bienvenido al Sistema de Gestión
+          </h2>
+          <p className="text-text-secondary text-lg">
+            Aquí tienes un resumen de la actividad de tu local.
+          </p>
+        </motion.div>
         
-        <div style={{ 
-          marginTop: '3rem', 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
-          gap: '2rem' 
-        }}>
-          {stats.map((stat, i) => (
-            <div 
-              key={i} 
-              className="glass-panel"
-              style={{ 
-                padding: '2rem', 
-                borderRadius: 'var(--border-radius-lg)',
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s',
-                animation: `slideUp 0.5s ${i * 0.1 + 0.2}s cubic-bezier(0.16, 1, 0.3, 1) forwards`,
-                opacity: 0,
-                transform: 'translateY(20px)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-6px)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-              }}
-            >
-              <div>
-                <span className="text-muted" style={{ fontSize: '0.9rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                  {stat.label}
-                </span>
-                <h2 style={{ 
-                  margin: '1rem 0 0 0', 
-                  fontSize: '3rem', 
-                  fontWeight: 800,
-                  color: 'var(--text-primary)',
-                  letterSpacing: '-2px'
-                }}>
-                  {stat.value}
-                </h2>
-              </div>
-              <div style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: 'var(--border-radius-md)',
-                background: `linear-gradient(135deg, ${stat.color} 0%, rgba(255,255,255,0.1) 100%)`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                boxShadow: `0 8px 16px -4px ${stat.color}40`
-              }}>
-                <stat.icon size={28} strokeWidth={2.5} />
-              </div>
-            </div>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center min-h-[300px]">
+            <Loader2 className="w-8 h-8 animate-spin text-accent" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {stats.map((stat, i) => (
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-surface border border-glass-border p-6 rounded-2xl flex items-center justify-between hover:bg-surface-hover transition-colors shadow-sm"
+              >
+                <div>
+                  <span className="text-sm font-bold text-text-muted uppercase tracking-wider">
+                    {stat.label}
+                  </span>
+                  <h3 className="text-4xl font-black text-foreground mt-2">
+                    {stat.value}
+                  </h3>
+                </div>
+                <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${stat.bg} ${stat.color}`}>
+                  <stat.icon size={28} strokeWidth={2.5} />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </Layout>
   );

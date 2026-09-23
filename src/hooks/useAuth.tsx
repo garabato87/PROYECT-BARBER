@@ -5,6 +5,7 @@ import {
   signInWithPopup,
   signOut,
   sendPasswordResetEmail,
+  sendEmailVerification,
   onAuthStateChanged,
   type User as FirebaseUser,
 } from 'firebase/auth';
@@ -32,7 +33,7 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<User>;
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
-  updateProfile: (data: Partial<Pick<User, 'name' | 'phone' | 'barbershopId'>>) => Promise<void>;
+  updateProfile: (data: Partial<Pick<User, 'name' | 'phone' | 'barbershopId' | 'photoURL'>>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,16 +47,19 @@ const parseUserDoc = (uid: string, data: Record<string, unknown>): User => ({
   phone: typeof data.phone === 'string' ? data.phone : '',
   role: VALID_ROLES.includes(data.role as User['role']) ? (data.role as User['role']) : 'client',
   barbershopId: typeof data.barbershopId === 'string' ? data.barbershopId : undefined,
+  photoURL: typeof data.photoURL === 'string' ? data.photoURL : undefined,
 });
 
 const fetchUserProfile = async (firebaseUser: FirebaseUser): Promise<User> => {
   try {
     const docRef = doc(db, 'users', firebaseUser.uid);
     const docSnap = await getDoc(docRef);
+    
     if (docSnap.exists()) {
       return parseUserDoc(firebaseUser.uid, docSnap.data() as Record<string, unknown>);
     }
-    // Auth existe pero no hay doc en Firestore — lo creamos ahora
+    
+    // Auth existe pero no hay doc en Firestore — es un usuario nuevo, lo creamos
     const newProfile = {
       name: firebaseUser.displayName ?? firebaseUser.email ?? 'Usuario',
       email: firebaseUser.email ?? '',
@@ -64,14 +68,10 @@ const fetchUserProfile = async (firebaseUser: FirebaseUser): Promise<User> => {
     };
     await setDoc(docRef, newProfile);
     return parseUserDoc(firebaseUser.uid, newProfile);
-  } catch {
-    // Firestore no disponible — fallback sin persistir
-    return parseUserDoc(firebaseUser.uid, {
-      name: firebaseUser.displayName ?? firebaseUser.email ?? 'Usuario',
-      email: firebaseUser.email ?? '',
-      phone: '',
-      role: 'client',
-    });
+  } catch (error) {
+    console.error("Error conectando con Firestore al buscar el perfil:", error);
+    // Lanzamos el error para que onAuthStateChanged no lo deje entrar como cliente por defecto
+    throw error;
   }
 };
 
@@ -108,6 +108,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       birthDate: data.birthDate,
       role: 'client',
     });
+    
+    // Send email verification
+    await sendEmailVerification(firebaseUser);
   };
 
   const login = async (email: string, password: string): Promise<User> => {
@@ -138,11 +141,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await sendPasswordResetEmail(auth, email);
   };
 
-  const updateProfile = async (data: Partial<Pick<User, 'name' | 'phone'>>): Promise<void> => {
+  const updateProfile = async (data: Partial<Pick<User, 'name' | 'phone' | 'barbershopId' | 'photoURL'>>): Promise<void> => {
     if (!user) throw new Error('No user logged in');
+    
+    // Update main user document
     const userRef = doc(db, 'users', user.id);
     await updateDoc(userRef, { ...data });
-    setUser({ ...user, ...data });
+    
+    // Sync to professional subcollection if applicable
+    if ((user.role === 'professional' || user.role === 'admin' || user.role === 'super-admin') && user.barbershopId) {
+      try {
+        const profRef = doc(db, 'businesses', user.barbershopId, 'professionals', user.id);
+        await setDoc(profRef, { ...data }, { merge: true });
+      } catch (err) {
+        console.warn('No se pudo sincronizar el subdocumento del profesional:', err);
+      }
+    }
+
+    setUser((prevUser) => prevUser ? { ...prevUser, ...data } : null);
   };
 
   return (

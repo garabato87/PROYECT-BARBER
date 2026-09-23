@@ -144,10 +144,10 @@ const MiLocalPage: React.FC = () => {
                 onChange={handleChange}
                 style={{ ...fieldStyle, cursor: 'pointer' }}
               >
-                {(Object.entries(BUSINESS_CATEGORIES) as [BusinessCategory, { label: string; emoji: string }][]).map(
-                  ([key, { label, emoji }]) => (
+                {(Object.entries(BUSINESS_CATEGORIES) as [BusinessCategory, { label: string; icon: React.ReactNode }][]).map(
+                  ([key, { label }]) => (
                     <option key={key} value={key}>
-                      {emoji} {label}
+                      {label}
                     </option>
                   )
                 )}

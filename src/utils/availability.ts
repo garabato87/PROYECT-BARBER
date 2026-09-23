@@ -23,7 +23,7 @@ export interface Professional {
   id?: string;
   name: string;
   email: string;
-  photoUrl?: string;
+  photoURL?: string;
   isActive?: boolean;
   workingDays?: Record<number, WorkingDay>;
 }

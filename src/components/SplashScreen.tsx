@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Scissors } from 'lucide-react';
+import BrandLogo from './ui/BrandLogo';
+import { useTheme } from '../hooks/useTheme';
 import './SplashScreen.css';
 
 interface SplashScreenProps {
@@ -8,6 +9,7 @@ interface SplashScreenProps {
 
 const SplashScreen: React.FC<SplashScreenProps> = ({ finishLoading }) => {
   const [isFadingOut, setIsFadingOut] = useState(false);
+  useTheme(); // Initialize theme on mount without declaring unused variable
 
   useEffect(() => {
     // Keep the splash screen for 2 seconds, then start fade out
@@ -25,12 +27,8 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ finishLoading }) => {
   return (
     <div className={`splash-screen ${isFadingOut ? 'fade-out' : ''}`}>
       <div className="splash-content">
-        <div className="logo-wrapper">
-          <Scissors size={64} strokeWidth={1.5} className="splash-icon" />
-          <div className="glow-effect"></div>
-        </div>
-        <h1 className="splash-title">SDGP</h1>
-        <p className="splash-subtitle">Sistema de Gestión Premium</p>
+        <BrandLogo type="icon" className="h-24 w-24 mb-6 mx-auto animate-pulse" />
+        <BrandLogo type="full" className="h-10 mx-auto" />
       </div>
     </div>
   );
