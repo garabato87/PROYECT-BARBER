@@ -1,0 +1,134 @@
+/* Sidebar Styling */
+.client-sidebar {
+  width: 280px;
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 30px 20px;
+  position: fixed;
+  height: 100vh;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 50px;
+  padding-left: 10px;
+}
+
+.sidebar-logo .logo-icon {
+  color: var(--accent);
+}
+
+.sidebar-logo h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.client-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 14px 18px;
+  border-radius: var(--border-radius-md);
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: var(--transition-speed);
+  cursor: pointer;
+}
+
+.client-nav-item:hover {
+  background: var(--surface-hover);
+  color: var(--accent);
+}
+
+.client-nav-item.active {
+  background: var(--accent);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.sidebar-profile {
+  margin-top: auto;
+  background: var(--bg-secondary);
+  padding: 15px;
+  border-radius: var(--border-radius-md);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--border);
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.profile-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.profile-role {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Content Area */
+.client-content {
+  flex: 1;
+  margin-left: 280px;
+  padding: 40px;
+}
+
+@media (max-width: 768px) {
+  .client-sidebar {
+    width: 80px;
+    padding: 20px 10px;
+  }
+  .sidebar-logo h2, .profile-info, .client-nav-item span {
+    display: none;
+  }
+  .client-content {
+    margin-left: 80px;
+    padding: 20px;
+  }
+  .client-nav-item {
+    justify-content: center;
+    padding: 15px;
+  }
+}

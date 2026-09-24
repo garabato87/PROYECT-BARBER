@@ -1,121 +1,97 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState, Suspense, lazy } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { MotionConfig } from 'framer-motion';
+import DashboardPage from './pages/DashboardPage';
+import MiLocalPage from './pages/MiLocalPage';
+import ServiciosPage from './pages/ServiciosPage';
+import ProfesionalesPage from './pages/ProfesionalesPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import HomePage from './pages/HomePage';
+import BusinessLandingPage from './pages/BusinessLandingPage';
+import BarbershopDetailsPage from './pages/BarbershopDetailsPage';
+import PremiumBookingPage from './pages/PremiumBookingPage';
+import ClientDashboardPage from './pages/ClientDashboardPage';
+import ProfessionalAgendaPage from './pages/ProfessionalAgendaPage';
+import AdminAgendaPage from './pages/AdminAgendaPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ProfilePage from './pages/ProfilePage';
+import ProtectedRoute from './components/ProtectedRoute';
+import SplashScreen from './components/SplashScreen';
+import './App.css';
+
+// Lazy load heavy Super Admin components for code splitting (Phase 10)
+const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
+const SuperAdminLocales = lazy(() => import('./pages/SuperAdminLocales'));
+const SuperAdminUsuarios = lazy(() => import('./pages/SuperAdminUsuarios'));
+const SuperAdminSuscripciones = lazy(() => import('./pages/SuperAdminSuscripciones'));
+const SuperAdminReportes = lazy(() => import('./pages/SuperAdminReportes'));
+const SuperAdminAudit = lazy(() => import('./pages/SuperAdminAudit'));
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  if (isInitialLoad) {
+    return <SplashScreen finishLoading={() => setIsInitialLoad(false)} />;
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <MotionConfig reducedMotion="user">
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm font-bold text-text-muted animate-pulse">Cargando módulo...</span>
+          </div>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      }>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/para-negocios" element={<BusinessLandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/barbershop/:id" element={<BarbershopDetailsPage />} />
+          <Route path="/b/:id/premium" element={<PremiumBookingPage />} />
+          
+          {/* Client Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['client', 'admin', 'super-admin']} />}>
+            <Route path="/client/dashboard" element={<ClientDashboardPage />} />
+          </Route>
 
-      <div className="ticks"></div>
+          {/* Professional Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['professional', 'admin', 'super-admin']} />}>
+            <Route path="/agenda" element={<ProfessionalAgendaPage />} />
+          </Route>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          {/* Admin Routes (Local Owner) */}
+          <Route element={<ProtectedRoute allowedRoles={['admin', 'super-admin']} />}>
+            <Route path="/admin/dashboard" element={<DashboardPage />} />
+            <Route path="/admin/mi-local" element={<MiLocalPage />} />
+            <Route path="/admin/servicios" element={<ServiciosPage />} />
+            <Route path="/admin/profesionales" element={<ProfesionalesPage />} />
+            <Route path="/admin/agenda" element={<AdminAgendaPage />} />
+          </Route>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+          {/* Profile (all authenticated roles) */}
+          <Route element={<ProtectedRoute allowedRoles={['super-admin', 'admin', 'professional', 'client']} />}>
+            <Route path="/profile" element={<ProfilePage />} />
+          </Route>
+
+          {/* Super Admin Routes (System Owner) */}
+          <Route element={<ProtectedRoute allowedRoles={['super-admin']} />}>
+            <Route path="/superadmin" element={<SuperAdminDashboard />} />
+            <Route path="/superadmin/locales" element={<SuperAdminLocales />} />
+            <Route path="/superadmin/usuarios" element={<SuperAdminUsuarios />} />
+            <Route path="/superadmin/suscripciones" element={<SuperAdminSuscripciones />} />
+            <Route path="/superadmin/reportes" element={<SuperAdminReportes />} />
+            <Route path="/superadmin/audit" element={<SuperAdminAudit />} />
+          </Route>
+        </Routes>
+      </Suspense>
+    </MotionConfig>
+  );
 }
 
-export default App
+export default App;

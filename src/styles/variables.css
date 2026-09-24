@@ -1,0 +1,167 @@
+:root {
+  /* Common Variables */
+  --transition-speed: 0.35s;
+  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 20px;
+  --border-radius-full: 9999px;
+  
+  --sidebar-width: 280px;
+  --sidebar-collapsed-width: 88px;
+  --header-height: 76px;
+  
+  /* Font */
+  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Light Theme Premium (Vanity Adaptive) */
+:root, [data-theme='light'] {
+  color-scheme: light;
+  --bg-primary: #F7F8FA;
+  --bg-secondary: #ffffff;
+  --bg-radial: radial-gradient(circle at top right, #ffffff, #f9fafb);
+  
+  --surface: #FFFFFF;
+  --surface-hover: #F9FAFB;
+  --glass-border: rgba(0, 0, 0, 0.05);
+  
+  --text-primary: #17202E;
+  --text-secondary: #475467;
+  --text-muted: #667085;
+  
+  --accent: #FFB817;
+  --accent-hover: #E5A000;
+  --accent-glow: rgba(255, 184, 23, 0.2);
+  --on-primary: #0B0B0D;
+  --action-border: #936200;
+  --focus-ring: #17202E;
+  
+  --border: #D0D5DD;
+  --border-subtle: #D0D5DD;
+  --border-control: #7A8494;
+  
+  --danger: #991B1B;
+  --danger-bg: #FEE2E2;
+  --success: #166534;
+  --success-bg: #DCFCE7;
+  --warning: #854D0E;
+  --warning-bg: #FFF3CC;
+  
+  /* Premium Shadows */
+  --shadow-sm: 0 2px 8px -2px rgba(11, 11, 13, 0.05);
+  --shadow-md: 0 8px 24px -4px rgba(11, 11, 13, 0.08);
+  --shadow-lg: 0 20px 40px -8px rgba(11, 11, 13, 0.12);
+  --shadow-glow: 0 0 20px var(--accent-glow);
+}
+
+/* Dark Theme Premium (Vanity Dark) */
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg-primary: #0B0B0D; /* Vanity Black */
+  --bg-secondary: #121214;
+  --bg-radial: radial-gradient(circle at top right, #1a1a1e, #0B0B0D);
+  
+  --surface: rgba(24, 24, 27, 0.65);
+  --surface-hover: rgba(39, 39, 42, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  
+  --text-primary: #FFFFFF; /* Vanity White */
+  --text-secondary: #9CA3AF; /* Vanity Gray */
+  --text-muted: #6b7280;
+  
+  --accent: #FFB817; /* Vanity Yellow */
+  --accent-hover: #E5A000;
+  --accent-glow: rgba(255, 184, 23, 0.15);
+  --on-primary: #0B0B0D;
+  --action-border: #E5A000;
+  --focus-ring: #FFB817;
+  
+  --border: rgba(255, 255, 255, 0.06);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-control: #6b7280;
+  
+  --danger: #f87171;
+  --danger-bg: rgba(248, 113, 113, 0.1);
+  --success: #34d399;
+  --success-bg: rgba(52, 211, 153, 0.1);
+  --warning: #fbbf24;
+  --warning-bg: rgba(251, 191, 36, 0.1);
+  
+  /* Premium Dark Shadows */
+  --shadow-sm: 0 4px 12px -2px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 12px 32px -4px rgba(0, 0, 0, 0.8);
+  --shadow-lg: 0 24px 48px -8px rgba(0, 0, 0, 1);
+  --shadow-glow: 0 0 30px var(--accent-glow);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg-primary: #0B0B0D;
+    --bg-secondary: #121214;
+    --bg-radial: radial-gradient(circle at top right, #1a1a1e, #0B0B0D);
+    --surface: rgba(24, 24, 27, 0.65);
+    --surface-hover: rgba(39, 39, 42, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --text-primary: #FFFFFF;
+    --text-secondary: #9CA3AF;
+    --text-muted: #6b7280;
+    --accent: #FFB817;
+    --accent-hover: #E5A000;
+    --accent-glow: rgba(255, 184, 23, 0.15);
+    --on-primary: #0B0B0D;
+    --action-border: #E5A000;
+    --focus-ring: #FFB817;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-control: #6b7280;
+    --danger: #f87171;
+    --danger-bg: rgba(248, 113, 113, 0.1);
+    --success: #34d399;
+    --success-bg: rgba(52, 211, 153, 0.1);
+    --warning: #fbbf24;
+    --warning-bg: rgba(251, 191, 36, 0.1);
+    --shadow-sm: 0 4px 12px -2px rgba(0, 0, 0, 0.6);
+    --shadow-md: 0 12px 32px -4px rgba(0, 0, 0, 0.8);
+    --shadow-lg: 0 24px 48px -8px rgba(0, 0, 0, 1);
+    --shadow-glow: 0 0 30px var(--accent-glow);
+  }
+}
+
+/* Base Utility Classes for Glassmorphism */
+.glass-panel {
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-md);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0 0 var(--accent-glow); }
+  70% { box-shadow: 0 0 0 12px rgba(0,0,0,0); }
+  100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+}
+
+.animate-fade { animation: fadeIn var(--transition-speed) var(--transition-timing) forwards; }
+.animate-slide-up { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-slide-right { animation: slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }

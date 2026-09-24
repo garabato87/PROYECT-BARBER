@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Bloquear acceso de bots a rutas privadas o protegidas
+Disallow: /admin/
+Disallow: /superadmin/
+Disallow: /client/dashboard
+Disallow: /profile
+
+Sitemap: https://vanity.app/sitemap.xml
