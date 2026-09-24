@@ -28,9 +28,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const limit = 20; // Lote acotado
   
   try {
-    // We use a collectionGroup query on 'outbox'
-    const outboxRef = db.collectionGroup('outbox');
-    const snapshot = await outboxRef.where('status', '==', 'pending').limit(limit).get();
+    const reqBody = req.body || {};
+    const reqQuery = req.query || {};
+    const shopId = reqBody.shopId || reqQuery.shopId;
+    
+    let snapshot;
+    if (shopId && typeof shopId === 'string') {
+      snapshot = await db.collection(`businesses/${shopId}/outbox`).where('status', '==', 'pending').limit(limit).get();
+    } else {
+      const outboxRef = db.collectionGroup('outbox');
+      snapshot = await outboxRef.where('status', '==', 'pending').limit(limit).get();
+    }
 
     if (snapshot.empty) {
       return res.status(200).json({ message: 'No pending emails' });
