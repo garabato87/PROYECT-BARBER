@@ -49,5 +49,8 @@
     "typescript-eslint": "^8.57.0",
     "vite": "^8.0.1",
     "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "jwks-rsa": "3.0.1"
   }
 }
