@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Layout from '../components/Layout';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../services/firebase';
-import { collection, query, where, onSnapshot, doc, updateDoc, runTransaction, serverTimestamp, getDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { getAvailableSlots, type Professional, type Appointment } from '../utils/availability';
 import { Phone, Scissors, Check, X as XIcon, Calendar, Clock, AlertCircle, Plus, Loader2, History, Filter, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,6 +10,7 @@ import { cn } from '../lib/utils';
 import { useToast } from '../context/ToastContext';
 import { getAppError } from '../utils/errors';
 import { buildWhatsAppUrl } from '../utils/whatsapp';
+import { appointmentApi } from '../services/api';
 
 interface Service {
   id: string;
@@ -139,9 +140,7 @@ const ProfessionalAgendaPage: React.FC = () => {
   const updateStatus = async (appId: string, newStatus: 'completed' | 'absent') => {
     if (!shopId) return;
     try {
-      await updateDoc(doc(db, 'businesses', shopId, 'appointments', appId), {
-        status: newStatus
-      });
+      await appointmentApi.update(shopId, appId, newStatus);
       success(`Turno marcado como ${newStatus === 'completed' ? 'completado' : 'ausente'}`);
     } catch (error) {
       console.error("Error actualizando turno:", error);
@@ -160,37 +159,25 @@ const ProfessionalAgendaPage: React.FC = () => {
       const selectedSrv = services.find(s => s.id === newBooking.serviceId);
       if (!selectedSrv) throw new Error("Servicio no encontrado");
 
-      const appointmentId = `${professional.id}_${newBooking.date}_${newBooking.time.replace(':', '')}`;
-      const appointmentRef = doc(db, 'businesses', shopId, 'appointments', appointmentId);
+      const endTime = (() => {
+        const [h, m] = newBooking.time.split(':').map(Number);
+        const totalMins = h * 60 + m + selectedSrv.duration;
+        return `${Math.floor(totalMins / 60).toString().padStart(2, '0')}:${(totalMins % 60).toString().padStart(2, '0')}`;
+      })();
 
-      await runTransaction(db, async (transaction) => {
-        const docSnapshot = await transaction.get(appointmentRef);
-        if (docSnapshot.exists()) {
-          throw new Error("SLOT_TAKEN");
-        }
-
-        const endTime = (() => {
-          const [h, m] = newBooking.time.split(':').map(Number);
-          const totalMins = h * 60 + m + selectedSrv.duration;
-          return `${Math.floor(totalMins / 60).toString().padStart(2, '0')}:${(totalMins % 60).toString().padStart(2, '0')}`;
-        })();
-
-        transaction.set(appointmentRef, {
-          barbershopId: shopId,
-          clientId: 'manual_entry',
-          clientName: newBooking.clientName.trim() || 'Cliente sin nombre',
-          clientPhone: newBooking.clientPhone.trim(),
-          shopName: 'Agendado manualmente', 
-          serviceName: selectedSrv.name,
-          professionalName: professional.name,
-          professionalId: professional.id,
-          serviceId: selectedSrv.id,
-          date: newBooking.date,
-          startTime: newBooking.time,
-          endTime,
-          status: 'confirmed',
-          createdAt: serverTimestamp()
-        });
+      await appointmentApi.create({
+        barbershopId: shopId,
+        professionalId: professional.id,
+        serviceId: selectedSrv.id,
+        date: newBooking.date,
+        startTime: newBooking.time,
+        endTime,
+        clientName: newBooking.clientName.trim() || 'Cliente sin nombre',
+        clientPhone: newBooking.clientPhone.trim(),
+        clientEmail: '',
+        shopName: 'Agendado manualmente',
+        serviceName: selectedSrv.name,
+        professionalName: professional.name
       });
 
       success("Turno creado exitosamente");

@@ -68,6 +68,15 @@ export interface Appointment {
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'absent';
 }
 
+export interface AvailabilitySlot {
+  id: string;
+  professionalId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'absent';
+}
+
 export type AuditAction = 
   | 'USER_ROLE_PROMOTED'
   | 'USER_ROLE_DEMOTED'
@@ -93,7 +102,7 @@ export interface AuditLog {
   };
   details?: {
     reason?: string;
-    previousState?: string | Record<string, any>;
-    newState?: string | Record<string, any>;
+    previousState?: string | Record<string, unknown>;
+    newState?: string | Record<string, unknown>;
   };
 }

@@ -1,5 +1,7 @@
 # Feature: Sistema de Notificaciones y Comunicación
 
+> Corrección posterior: consultar [Notificaciones seguras y completas en Vercel](feature-notification-hardening.md). Esa especificación reemplaza los requisitos técnicos contradictorios de este documento (Cloud Functions/Blaze, horario de recordatorios y seguridad) para la siguiente implementación. Este archivo se conserva como antecedente; no acredita que la integración esté validada.
+
 **Versión:** 1.0  
 **Estado:** ESPECIFICACIÓN  
 **Fecha:** 2026-09-23  

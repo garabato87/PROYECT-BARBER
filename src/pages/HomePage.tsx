@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useClientAppointments } from '../hooks/useClientAppointments';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
+import { Business } from '../types';
 
 // Icons for categories and next appointment
 import { Scissors, Sparkles, Droplets, Paintbrush, Heart, Coffee, Calendar as CalendarIcon, Clock } from 'lucide-react';
@@ -37,7 +38,7 @@ const HomePage: React.FC = () => {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
-  const [businesses, setBusinesses] = useState<any[]>([]);
+  const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ const HomePage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      let qConstraints = [where('status', '==', 'active')];
+      const qConstraints = [where('status', '==', 'active')];
       if (activeCategory !== 'all') {
         qConstraints.push(where('category', '==', activeCategory));
       }

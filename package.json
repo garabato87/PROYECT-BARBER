@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
+    "typecheck:api": "tsc -p tsconfig.api.json",
     "firebase": "firebase"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
     "react-router-dom": "^7.14.0",
     "recharts": "^3.10.1",
     "resend": "^6.28.1",
+    "svix": "^2.5.0",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {

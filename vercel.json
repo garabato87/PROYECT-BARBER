@@ -1,18 +1,9 @@
 {
-  "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
   "crons": [
+    {
+      "path": "/api/dispatch-outbox",
+      "schedule": "* * * * *"
+    },
     {
       "path": "/api/cron-reminder",
       "schedule": "0 12 * * *"

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Layout from '../components/Layout';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../services/firebase';
-import { collection, query, where, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { getAvailableSlots } from '../utils/availability';
 import type { Professional, Appointment } from '../utils/availability';
 import { Plus, X, User, Phone, Scissors, Calendar, Clock, AlertCircle, Check, MessageCircle } from 'lucide-react';
@@ -11,6 +11,7 @@ import { cn } from '../lib/utils';
 import { useToast } from '../context/ToastContext';
 import { getAppError } from '../utils/errors';
 import { buildWhatsAppUrl } from '../utils/whatsapp';
+import { appointmentApi } from '../services/api';
 
 interface Service {
   id: string;
@@ -47,7 +48,7 @@ const AdminAgendaPage: React.FC = () => {
     if (!shopId) return;
     setIsLoading(true);
 
-    const unsubs: any[] = [];
+    const unsubs: (() => void)[] = [];
 
     // Pros
     const proQ = collection(db, 'businesses', shopId, 'professionals');
@@ -111,18 +112,20 @@ const AdminAgendaPage: React.FC = () => {
     const endTime = `${endHH}:${endMM}`;
 
     try {
-      await addDoc(collection(db, 'businesses', shopId, 'appointments'), {
+      await appointmentApi.create({
         barbershopId: shopId,
         professionalId: newApp.professionalId,
         serviceId: newApp.serviceId,
-        clientName: newApp.clientName,
-        clientPhone: newApp.clientPhone,
         date: date,
         startTime: newApp.startTime,
         endTime: endTime,
-        status: 'pending',
-        createdAt: serverTimestamp()
+        clientName: newApp.clientName,
+        clientPhone: newApp.clientPhone,
+        shopName: 'Agenda Administrador',
+        serviceName: srv.name,
+        professionalName: professionals.find(p => p.id === newApp.professionalId)?.name || ''
       });
+
       setIsModalOpen(false);
       setNewApp({ professionalId: '', serviceId: '', clientName: '', clientPhone: '', startTime: '' });
       success('Turno creado exitosamente');

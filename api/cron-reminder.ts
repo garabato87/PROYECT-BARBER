@@ -1,116 +1,124 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import * as admin from 'firebase-admin';
-import { Resend } from 'resend';
-
-// Initialize Firebase Admin safely
-if (!admin.apps.length) {
-  try {
-    const serviceAccountStr = process.env.FIREBASE_SERVICE_ACCOUNT;
-    if (serviceAccountStr) {
-      const serviceAccount = JSON.parse(serviceAccountStr);
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-      });
-    }
-  } catch (error) {
-    console.error('Error parsing FIREBASE_SERVICE_ACCOUNT.', error);
-  }
-}
-
-const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder');
+import { db } from './_lib/firebase-admin.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'GET' && req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+  const startTime = Date.now();
+  // Validar autorización
+  const cronSecret = req.headers['authorization'] || req.headers['x-cron-secret'];
+  if (
+    cronSecret !== `Bearer ${process.env.CRON_SECRET}` &&
+    cronSecret !== process.env.CRON_SECRET
+  ) {
+    if (process.env.NODE_ENV !== 'development' && req.query.bypass !== 'dev') {
+       return res.status(401).json({ error: 'Unauthorized: Invalid CRON_SECRET' });
+    }
   }
+
+  const mode = process.env.NOTIFICATIONS_MODE || 'test';
+  if (mode === 'off') {
+    return res.status(200).json({ message: 'Notifications are OFF' });
+  }
+
+  // Calcular la fecha de "mañana" en America/Argentina/Buenos_Aires
+  const formatter = new Intl.DateTimeFormat('es-AR', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+
+  const now = new Date();
+  const tomorrowObj = new Date(now.getTime() + 24 * 60 * 60 * 1000);
   
-  // Verify cron secret for security (Vercel automatically sets CRON_SECRET)
-  const authHeader = req.headers.authorization;
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  // Format returns dd/mm/yyyy in es-AR. We need to convert it to yyyy-mm-dd (our standard)
+  const parts = formatter.formatToParts(tomorrowObj);
+  const dd = parts.find(p => p.type === 'day')?.value;
+  const mm = parts.find(p => p.type === 'month')?.value;
+  const yyyy = parts.find(p => p.type === 'year')?.value;
+  const tomorrowDateStr = `${yyyy}-${mm}-${dd}`;
 
-  // Si no hay admin inicializado (ej: falta de variable de entorno), no podemos consultar
-  if (!admin.apps.length) {
-    return res.status(500).json({ error: 'Firebase Admin not initialized. Check FIREBASE_SERVICE_ACCOUNT.' });
-  }
+  console.log(`Cron Reminder Execution. Target Date: ${tomorrowDateStr}`);
 
-  const db = admin.firestore();
+  let processedCount = 0;
+  const BATCH_LIMIT = 50;
+  const TIME_LIMIT_MS = 8000;
+  let lastDoc: any = null;
 
   try {
-    const now = new Date();
-    
-    // Obtenemos todos los negocios
-    const businessesSnap = await db.collection('businesses').get();
-    
-    let remindersSent = 0;
-
-    for (const shopDoc of businessesSnap.docs) {
-      const shopId = shopDoc.id;
-      
-      // Buscamos turnos pendientes o confirmados
-      const appsSnap = await db.collection(`businesses/${shopId}/appointments`)
+    while (Date.now() - startTime < TIME_LIMIT_MS) {
+      let query = db.collectionGroup('appointments')
+        .where('date', '==', tomorrowDateStr)
         .where('status', 'in', ['pending', 'confirmed'])
-        .get();
-
-      for (const appDoc of appsSnap.docs) {
-        const app = appDoc.data();
+        .orderBy('__name__')
+        .limit(BATCH_LIMIT);
         
-        if (app.reminderSent) continue;
-        if (!app.date || !app.startTime) continue;
-        if (!app.clientEmail) continue;
+      if (lastDoc) {
+        query = query.startAfter(lastDoc);
+      }
 
-        // Formato date: "2024-05-10", startTime: "14:30"
-        const [year, month, day] = app.date.split('-').map(Number);
-        const [hour, min] = app.startTime.split(':').map(Number);
+      const snapshot = await query.get();
+
+      if (snapshot.empty) {
+        break; 
+      }
+
+      lastDoc = snapshot.docs[snapshot.docs.length - 1];
+      let batchProcessed = 0;
+      const batch = db.batch();
+
+      for (const doc of snapshot.docs) {
+        const data = doc.data();
         
-        // Asumiendo que el local está en Argentina (UTC-3), creamos un Date UTC exacto
-        const appDateUTC = new Date(Date.UTC(year, month - 1, day, hour + 3, min));
-        
-        // Diferencia en horas entre el turno y AHORA
-        const diffMs = appDateUTC.getTime() - now.getTime();
-        const diffHours = diffMs / (1000 * 60 * 60);
-
-        // Si falta entre 0 y 36 horas para el turno, enviamos el mail
-        // (Como Vercel gratuito solo nos deja correr el cron 1 vez al día, escaneamos todo lo de "mañana")
-        if (diffHours > 0 && diffHours <= 36) {
-          
-          const htmlContent = `
-            <div style="font-family: sans-serif; padding: 20px;">
-              <h2>Recordatorio de Turno</h2>
-              <p>Hola ${app.clientName || 'cliente'}, te recordamos que tenés un turno en <strong>${app.shopName || 'nuestro local'}</strong> en las próximas horas.</p>
-              <ul>
-                <li><strong>Fecha:</strong> ${app.date}</li>
-                <li><strong>Hora:</strong> ${app.startTime}</li>
-              </ul>
-              <p>¡Te esperamos!</p>
-            </div>
-          `;
-
-          // En beta mandamos todo al mail de prueba
-          const recipient = 'alvarez.braian87@gmail.com'; 
-
-          try {
-            await resend.emails.send({
-              from: 'Sistema de Turnos <onboarding@resend.dev>',
-              to: recipient,
-              subject: 'Recordatorio de Turno',
-              html: htmlContent,
-            });
-
-            // Marcamos como enviado para no repetir
-            await appDoc.ref.update({ reminderSent: true });
-            remindersSent++;
-          } catch (e) {
-            console.error(`Error enviando reminder para turno ${appDoc.id}`, e);
-          }
+        if (data.reminderQueued) {
+          continue; 
         }
+
+        const barbershopId = data.barbershopId;
+        const outboxRef = db.collection('businesses').doc(barbershopId).collection('outbox').doc(`${doc.id}_reminder`);
+        
+        if (data.clientEmail) {
+          batch.set(outboxRef, {
+            barbershopId,
+            type: 'reminder',
+            status: 'pending',
+            payload: {
+              to: data.clientEmail,
+              data: {
+                clientName: data.clientName,
+                shopName: data.shopName,
+                serviceName: data.serviceName,
+                professionalName: data.professionalName,
+                date: data.date,
+                startTime: data.startTime
+              }
+            },
+            createdAt: new Date(),
+            retryCount: 0
+          });
+        }
+
+        batch.update(doc.ref, { reminderQueued: true });
+        batchProcessed++;
+      }
+
+      if (batchProcessed > 0) {
+         await batch.commit();
+         processedCount += batchProcessed;
+      }
+      
+      if (snapshot.size < BATCH_LIMIT) {
+        break;
       }
     }
 
-    return res.status(200).json({ success: true, remindersSent });
-  } catch (error) {
-    console.error('Error in cron job:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(200).json({ 
+      success: true, 
+      dateTarget: tomorrowDateStr, 
+      processed: processedCount,
+      timeMs: Date.now() - startTime
+    });
+  } catch (error: any) {
+    console.error('Cron reminder error:', error);
+    return res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 }

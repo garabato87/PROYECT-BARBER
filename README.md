@@ -8,7 +8,9 @@ El proyecto está construido con las siguientes tecnologías:
 
 - **Frontend:** [React](https://reactjs.org/) con [TypeScript](https://www.typescriptlang.org/) y [Vite](https://vitejs.dev/) para un desarrollo rápido y tipado seguro.
 - **Backend/Base de Datos:** [Firebase](https://firebase.google.com/) (Firestore para datos y Auth para usuarios).
-- **Despliegue:** [Firebase Hosting](https://firebase.google.com/docs/hosting).
+- **APIs y Cron:** [Vercel Serverless Functions](https://vercel.com/) (`/api`) para lógicas seguras y notificaciones.
+- **Notificaciones (Email):** [Resend](https://resend.com) integrado vía Vercel para emails transaccionales.
+- **Despliegue:** Frontend y APIs en Vercel.
 - **Rutas:** [React Router Dom](https://reactrouter.com/) para la navegación entre páginas.
 
 ## 📂 Estructura del Proyecto

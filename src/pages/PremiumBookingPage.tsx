@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../services/firebase';
-import { doc, getDoc, collection, getDocs, query, where, runTransaction, serverTimestamp, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, query, where, onSnapshot } from 'firebase/firestore';
 import { getAvailableSlots, type Professional, type Appointment } from '../utils/availability';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../context/ToastContext';
 import { getAppError } from '../utils/errors';
+import { appointmentApi } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Scissors, Clock, Calendar as CalendarIcon, Check } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -70,9 +71,9 @@ const PremiumBookingPage: React.FC = () => {
           .filter(p => p.isActive);
         setProfessionals(pros);
 
-        // Real-time appointments for the shop
+        // Real-time availability for the shop
         const q = query(
-          collection(db, 'businesses', id, 'appointments'),
+          collection(db, 'businesses', id, 'availability'),
           where('status', 'in', ['pending', 'confirmed'])
         );
         onSnapshot(q, (snap) => {
@@ -80,7 +81,7 @@ const PremiumBookingPage: React.FC = () => {
           setIsLoading(false);
         });
 
-      } catch (err) {
+      } catch {
         showError("Error al cargar datos");
         setIsLoading(false);
       }
@@ -123,59 +124,26 @@ const PremiumBookingPage: React.FC = () => {
 
     setIsBooking(true);
     try {
-      const appointmentId = `${selectedPro.id}_${selectedDate}_${selectedTime.replace(':', '')}`;
-      const appointmentRef = doc(db, 'businesses', id!, 'appointments', appointmentId);
+      const endTime = (() => {
+        const [h, m] = selectedTime.split(':').map(Number);
+        const totalMins = h * 60 + m + (selectedService.duration || 30);
+        return `${Math.floor(totalMins / 60).toString().padStart(2, '0')}:${(totalMins % 60).toString().padStart(2, '0')}`;
+      })();
 
-      await runTransaction(db, async (transaction) => {
-        const docSnapshot = await transaction.get(appointmentRef);
-        if (docSnapshot.exists()) {
-          throw new Error("SLOT_TAKEN");
-        }
-
-        const endTime = (() => {
-          const [h, m] = selectedTime.split(':').map(Number);
-          const totalMins = h * 60 + m + (selectedService.duration || 30);
-          return `${Math.floor(totalMins / 60).toString().padStart(2, '0')}:${(totalMins % 60).toString().padStart(2, '0')}`;
-        })();
-
-        transaction.set(appointmentRef, {
-          barbershopId: id,
-          clientId: user?.id,
-          clientName: user?.name,
-          clientPhone: user?.phone || '',
-          clientEmail: user?.email || '',
-          shopName: shop.name,
-          serviceName: selectedService.name,
-          professionalName: selectedPro.name,
-          professionalId: selectedPro.id,
-          serviceId: selectedService.id,
-          date: selectedDate,
-          startTime: selectedTime,
-          endTime,
-          status: 'pending',
-          createdAt: serverTimestamp()
-        });
+      await appointmentApi.create({
+        barbershopId: id,
+        professionalId: selectedPro.id,
+        serviceId: selectedService.id,
+        date: selectedDate,
+        startTime: selectedTime,
+        endTime,
+        clientName: user?.name,
+        clientPhone: user?.phone,
+        clientEmail: user?.email,
+        shopName: shop.name,
+        serviceName: selectedService.name,
+        professionalName: selectedPro.name
       });
-
-      // Intentar enviar email de confirmación (sin bloquear la navegación)
-      if (user?.email) {
-        fetch('/api/send-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: user.email,
-            type: 'confirmation',
-            data: {
-              clientName: user.name,
-              shopName: shop.name,
-              serviceName: selectedService.name,
-              professionalName: selectedPro.name,
-              date: selectedDate,
-              startTime: selectedTime,
-            }
-          })
-        }).catch(err => console.error('Error sending confirmation email:', err));
-      }
 
       success("¡Turno confirmado exitosamente!");
       navigate('/mis-turnos');

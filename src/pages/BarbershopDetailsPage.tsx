@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, CheckCircle2, Clock, CalendarDays, User, Scissors, Loader2 } from 'lucide-react';
-import { doc, getDoc, collection, getDocs, serverTimestamp, query, where, runTransaction } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { getAvailableSlots, type Professional, type Appointment } from '../utils/availability';
 import { useAuth } from '../hooks/useAuth';
+import { appointmentApi } from '../services/api';
 import { savePendingBooking, getPendingBooking, clearPendingBooking } from '../utils/bookingSession';
 import { useToast } from '../context/ToastContext';
 import { getAppError } from '../utils/errors';
@@ -77,7 +78,7 @@ const BarbershopDetailsPage: React.FC = () => {
         setIsCheckingSlots(true);
         try {
           const appQ = query(
-            collection(db, 'businesses', id, 'appointments'),
+            collection(db, 'businesses', id, 'availability'),
             where('professionalId', '==', booking.professional.id),
             where('date', '==', booking.date)
           );
@@ -142,39 +143,25 @@ const BarbershopDetailsPage: React.FC = () => {
     
     setIsSubmitting(true);
     try {
-      // Prevención TOCTOU Race Condition: Usar Transacción con ID Determinístico
-      const appointmentId = `${booking.professional.id}_${booking.date}_${booking.time.replace(':', '')}`;
-      const appointmentRef = doc(db, 'businesses', shop.id, 'appointments', appointmentId);
+      const endTime = (() => {
+        const [h, m] = booking.time.split(':').map(Number);
+        const totalMins = h * 60 + m + (booking.service?.duration || 30);
+        return `${Math.floor(totalMins / 60).toString().padStart(2, '0')}:${(totalMins % 60).toString().padStart(2, '0')}`;
+      })();
 
-      await runTransaction(db, async (transaction) => {
-        const docSnapshot = await transaction.get(appointmentRef);
-        
-        if (docSnapshot.exists()) {
-          throw new Error("SLOT_TAKEN");
-        }
-
-        const endTime = (() => {
-          const [h, m] = booking.time.split(':').map(Number);
-          const totalMins = h * 60 + m + (booking.service?.duration || 30);
-          return `${Math.floor(totalMins / 60).toString().padStart(2, '0')}:${(totalMins % 60).toString().padStart(2, '0')}`;
-        })();
-
-        transaction.set(appointmentRef, {
-          barbershopId: shop.id,
-          clientId: user.id,
-          clientName: user.name,
-          clientPhone: user.phone || '',
-          shopName: shop.name,
-          serviceName: booking.service.name,
-          professionalName: booking.professional.name,
-          professionalId: booking.professional.id,
-          serviceId: booking.service.id,
-          date: booking.date,
-          startTime: booking.time,
-          endTime,
-          status: 'pending',
-          createdAt: serverTimestamp()
-        });
+      await appointmentApi.create({
+        barbershopId: shop.id,
+        professionalId: booking.professional.id,
+        serviceId: booking.service.id,
+        date: booking.date,
+        startTime: booking.time,
+        endTime,
+        clientName: user.name,
+        clientPhone: user.phone,
+        clientEmail: user.email,
+        shopName: shop.name,
+        serviceName: booking.service.name,
+        professionalName: booking.professional.name
       });
 
       clearPendingBooking();
@@ -414,7 +401,7 @@ const BarbershopDetailsPage: React.FC = () => {
                       </label>
                       <div 
                         onClick={() => {
-                          try { dateInputRef.current?.showPicker(); } catch (e) {}
+                          try { dateInputRef.current?.showPicker(); } catch {}
                         }}
                         className="relative bg-background border border-glass-border rounded-2xl p-4 flex items-center hover:border-accent/50 transition-colors cursor-pointer focus-within:ring-2 focus-within:ring-accent"
                       >
@@ -426,7 +413,7 @@ const BarbershopDetailsPage: React.FC = () => {
                           onChange={(e) => setBooking({...booking, date: e.target.value})} 
                           onClick={(e) => {
                             e.stopPropagation();
-                            try { dateInputRef.current?.showPicker(); } catch (err) {}
+                            try { dateInputRef.current?.showPicker(); } catch {}
                           }}
                           className="w-full bg-transparent text-foreground font-bold text-lg focus:outline-none cursor-pointer"
                         />

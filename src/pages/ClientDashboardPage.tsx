@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { updateDoc } from 'firebase/firestore';
+
 import { useAuth } from '../hooks/useAuth';
 import { useClientAppointments, type Appointment } from '../hooks/useClientAppointments';
 import ExploreLayout from '../components/ExploreLayout';
@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { useToast } from '../context/ToastContext';
 import { getAppError } from '../utils/errors';
+import { appointmentApi } from '../services/api';
 
 const ClientDashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -44,27 +45,7 @@ const ClientDashboardPage: React.FC = () => {
   const confirmCancel = async () => {
     if (!appToCancel) return;
       try {
-        await updateDoc(appToCancel.ref, {
-          status: 'cancelled'
-        });
-
-        // Intentar enviar email de cancelación
-        if (user?.email) {
-          fetch('/api/send-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              to: user.email,
-              type: 'cancellation',
-              data: {
-                clientName: user.name,
-                shopName: appToCancel.shopName,
-                date: appToCancel.date,
-                startTime: appToCancel.startTime,
-              }
-            })
-          }).catch(err => console.error('Error sending cancellation email:', err));
-        }
+        await appointmentApi.update(appToCancel.barbershopId, appToCancel.id!, 'cancelled');
 
         success('Turno cancelado exitosamente');
         setAppToCancel(null);

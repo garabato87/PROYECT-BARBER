@@ -4,7 +4,7 @@ import { db } from '../services/firebase';
 
 export interface Appointment {
   id: string;
-  ref: any;
+  ref: unknown;
   date: string;
   startTime: string;
   status: string;
@@ -22,8 +22,10 @@ export const useClientAppointments = (userId?: string) => {
 
   useEffect(() => {
     if (!userId) {
-      setAppointments([]);
-      setIsLoading(false);
+      setTimeout(() => {
+        setAppointments([]);
+        setIsLoading(false);
+      }, 0);
       return;
     }
 
