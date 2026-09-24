@@ -163,7 +163,8 @@ export async function handleAppointmentCommand(kind:'create'|'update',req:Vercel
     const input=record(req.body);
     const result = kind==='create'?await createAppointment(input,uid,user):await updateAppointment(input,uid);
     // Vercel Hobby limits crons to daily. This guarantees immediate dispatch without cron.
-    processOutbox().catch(e => console.error('inline_dispatch_failed', e));
+    // We MUST await it so Vercel doesn't freeze the lambda mid-flight.
+    await processOutbox().catch(e => console.error('inline_dispatch_failed', e));
     return res.status(200).json(result);
   } catch(error) {
     if(error instanceof CommandError) return res.status(error.status).json({error:error.message});
