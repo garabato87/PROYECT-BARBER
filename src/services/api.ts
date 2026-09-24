@@ -37,16 +37,21 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
 
 export const appointmentApi = {
   create: async (payload: any) => {
-    return fetchWithAuth('/api/create-appointment', {
+    const res = await fetchWithAuth('/api/create-appointment', {
       method: 'POST',
       body: JSON.stringify(payload)
     });
+    // Trigger dispatch asynchronously for Hobby plans
+    fetchWithAuth('/api/dispatch-outbox', { method: 'POST' }).catch(() => {});
+    return res;
   },
   
   update: async (barbershopId: string, appointmentId: string, status: string) => {
-    return fetchWithAuth('/api/update-appointment', {
+    const res = await fetchWithAuth('/api/update-appointment', {
       method: 'POST',
       body: JSON.stringify({ barbershopId, appointmentId, status })
     });
+    fetchWithAuth('/api/dispatch-outbox', { method: 'POST' }).catch(() => {});
+    return res;
   }
 };
