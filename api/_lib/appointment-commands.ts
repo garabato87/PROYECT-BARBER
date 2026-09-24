@@ -147,6 +147,7 @@ async function updateAppointment(input: Record<string,unknown>,uid:string) {
   });
   return {success:true,id:appointmentId,status,notificationStatus: notificationQueued ? 'queued' : 'skipped'};
 }
+import { processOutbox } from '../dispatch-outbox.js';
 export async function handleAppointmentCommand(kind:'create'|'update',req:VercelRequest,res:VercelResponse) {
   if(req.method!=='POST') {res.setHeader('Allow','POST');return res.status(405).json({error:'Method Not Allowed'});}
   const header=req.headers.authorization;
@@ -161,6 +162,8 @@ export async function handleAppointmentCommand(kind:'create'|'update',req:Vercel
   try {
     const input=record(req.body);
     const result = kind==='create'?await createAppointment(input,uid,user):await updateAppointment(input,uid);
+    // Vercel Hobby limits crons to daily. This guarantees immediate dispatch without cron.
+    processOutbox().catch(e => console.error('inline_dispatch_failed', e));
     return res.status(200).json(result);
   } catch(error) {
     if(error instanceof CommandError) return res.status(error.status).json({error:error.message});
@@ -168,6 +171,7 @@ export async function handleAppointmentCommand(kind:'create'|'update',req:Vercel
     return res.status(500).json({error:'Internal Server Error'});
   }
 }
+
 
 
 

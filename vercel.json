@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/dispatch-outbox",
-      "schedule": "* * * * *"
+      "schedule": "0 13 * * *"
     },
     {
       "path": "/api/cron-reminder",

@@ -3,21 +3,19 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Resend } from 'resend';
 import { notificationMode, requireCronSecret, senderConfiguration } from './_lib/notification-security.js';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (!requireCronSecret(req, res)) return;
+export async function processOutbox() {
   const mode = notificationMode();
-  if (mode === 'off') return res.status(200).json({ message: 'Notifications are OFF' });
+  if (mode === 'off') return { message: 'Notifications are OFF' };
   const configuration = senderConfiguration(mode);
-  if (!configuration) return res.status(503).json({ error: 'Notification service unavailable' });
+  if (!configuration) throw new Error('Notification service unavailable');
   const resend = new Resend(configuration.apiKey);
 
   try {
     const { db } = await import('./_lib/firebase-admin.js');
     const snapshot = await db.collectionGroup('outbox').where('status', 'in', ['pending', 'processing']).limit(20).get();
-    if (snapshot.empty) return res.status(200).json({ message: 'No pending emails' });
+    if (snapshot.empty) return { message: 'No pending emails' };
     const results = [];
     const now = Date.now();
-
     for (const doc of snapshot.docs) {
       const claimed = await db.runTransaction(async tx => {
         const current = (await tx.get(doc.ref)).data();
@@ -103,9 +101,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
     }
-    return res.status(200).json({ success: true, processed: results.length, results });
+    return { success: true, processed: results.length, results };
   } catch (err) {
     console.error('notification_dispatch_failed');
+    throw err;
+  }
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (!requireCronSecret(req, res)) return;
+  try {
+    const results = await processOutbox();
+    return res.status(200).json(results);
+  } catch (err: any) {
+    if (err.message === 'Notification service unavailable') return res.status(503).json({ error: err.message });
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
