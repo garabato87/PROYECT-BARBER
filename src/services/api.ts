@@ -44,7 +44,10 @@ export const appointmentApi = {
       body: JSON.stringify(payload)
     });
     // Trigger dispatch asynchronously for Hobby plans
-    fetchWithAuth('/api/dispatch-outbox', { method: 'POST' }).catch(() => {});
+    fetchWithAuth('/api/dispatch-outbox', { 
+      method: 'POST',
+      body: JSON.stringify({ shopId: payload.barbershopId })
+    }).catch(() => {});
     return res;
   },
   
@@ -53,7 +56,10 @@ export const appointmentApi = {
       method: 'POST',
       body: JSON.stringify({ barbershopId, appointmentId, status })
     });
-    fetchWithAuth('/api/dispatch-outbox', { method: 'POST' }).catch(() => {});
+    fetchWithAuth('/api/dispatch-outbox', { 
+      method: 'POST',
+      body: JSON.stringify({ shopId: barbershopId })
+    }).catch(() => {});
     return res;
   }
 };
