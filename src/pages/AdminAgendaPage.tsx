@@ -105,11 +105,6 @@ const AdminAgendaPage: React.FC = () => {
     if (!srv) return;
 
     setIsSubmitting(true);
-    const [hh, mm] = newApp.startTime.split(':').map(Number);
-    const endTotalMins = hh * 60 + mm + Number(srv.duration);
-    const endHH = Math.floor(endTotalMins / 60).toString().padStart(2, '0');
-    const endMM = (endTotalMins % 60).toString().padStart(2, '0');
-    const endTime = `${endHH}:${endMM}`;
 
     try {
       await appointmentApi.create({
@@ -118,12 +113,7 @@ const AdminAgendaPage: React.FC = () => {
         serviceId: newApp.serviceId,
         date: date,
         startTime: newApp.startTime,
-        endTime: endTime,
-        clientName: newApp.clientName,
-        clientPhone: newApp.clientPhone,
-        shopName: 'Agenda Administrador',
-        serviceName: srv.name,
-        professionalName: professionals.find(p => p.id === newApp.professionalId)?.name || ''
+        manualContact: { name: newApp.clientName, phone: newApp.clientPhone },
       });
 
       setIsModalOpen(false);

@@ -9,6 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:api": "vitest run --config vitest.api.config.ts",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-vanity-step2 --config firebase.test.json \"vitest run --config vitest.rules.config.ts\"",
     "typecheck:api": "tsc -p tsconfig.api.json",
     "firebase": "firebase"
   },
@@ -29,6 +31,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@firebase/rules-unit-testing": "^5.0.0",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^24.12.0",

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
@@ -14,3 +15,25 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: vi.fn(),
   })),
 });
+
+vi.mock('@/context/ToastContext', () => ({
+  useToast: () => ({
+    toast: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn()
+  }),
+  ToastProvider: ({ children }: any) => children
+}));
+
+vi.mock('./context/ToastContext', () => ({
+  useToast: () => ({
+    toast: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn()
+  }),
+  ToastProvider: ({ children }: any) => children
+}));

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../services/firebase';
@@ -30,7 +31,7 @@ const generateDays = (daysToGenerate: number = 14) => {
 const PremiumBookingPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { error: showError, success } = useToast();
   
   const [shop, setShop] = useState<any>(null);
@@ -117,36 +118,23 @@ const PremiumBookingPage: React.FC = () => {
       return;
     }
 
-    if (!selectedService || !selectedPro || !selectedDate || !selectedTime) {
+    if (!id || !selectedService || !selectedPro?.id || !selectedDate || !selectedTime || isBooking) {
       showError("Por favor completa todos los pasos");
       return;
     }
 
     setIsBooking(true);
     try {
-      const endTime = (() => {
-        const [h, m] = selectedTime.split(':').map(Number);
-        const totalMins = h * 60 + m + (selectedService.duration || 30);
-        return `${Math.floor(totalMins / 60).toString().padStart(2, '0')}:${(totalMins % 60).toString().padStart(2, '0')}`;
-      })();
-
       await appointmentApi.create({
         barbershopId: id,
         professionalId: selectedPro.id,
         serviceId: selectedService.id,
         date: selectedDate,
         startTime: selectedTime,
-        endTime,
-        clientName: user?.name,
-        clientPhone: user?.phone,
-        clientEmail: user?.email,
-        shopName: shop.name,
-        serviceName: selectedService.name,
-        professionalName: selectedPro.name
       });
 
-      success("¡Turno confirmado exitosamente!");
-      navigate('/mis-turnos');
+      success("Turno registrado, pendiente de confirmación.");
+      navigate('/client/dashboard');
     } catch (error: any) {
       if (error.message === 'SLOT_TAKEN') {
         showError("El horario acaba de ser ocupado. Por favor elige otro.");

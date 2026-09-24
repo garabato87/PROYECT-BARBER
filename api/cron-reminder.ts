@@ -1,20 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db } from './_lib/firebase-admin.js';
+import type { QueryDocumentSnapshot } from 'firebase-admin/firestore';
+import { notificationMode, requireCronSecret } from './_lib/notification-security.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const startTime = Date.now();
-  // Validar autorización
-  const cronSecret = req.headers['authorization'] || req.headers['x-cron-secret'];
-  if (
-    cronSecret !== `Bearer ${process.env.CRON_SECRET}` &&
-    cronSecret !== process.env.CRON_SECRET
-  ) {
-    if (process.env.NODE_ENV !== 'development' && req.query.bypass !== 'dev') {
-       return res.status(401).json({ error: 'Unauthorized: Invalid CRON_SECRET' });
-    }
-  }
-
-  const mode = process.env.NOTIFICATIONS_MODE || 'test';
+  if (!requireCronSecret(req, res)) return;
+  const mode = notificationMode();
   if (mode === 'off') {
     return res.status(200).json({ message: 'Notifications are OFF' });
   }
@@ -42,9 +33,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let processedCount = 0;
   const BATCH_LIMIT = 50;
   const TIME_LIMIT_MS = 8000;
-  let lastDoc: any = null;
+  let lastDoc: QueryDocumentSnapshot | null = null;
 
   try {
+    const { db } = await import('./_lib/firebase-admin.js');
     while (Date.now() - startTime < TIME_LIMIT_MS) {
       let query = db.collectionGroup('appointments')
         .where('date', '==', tomorrowDateStr)
@@ -79,6 +71,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (data.clientEmail) {
           batch.set(outboxRef, {
             barbershopId,
+            appointmentId: doc.id,
+            revision: data.revision ?? 0,
+            schemaVersion: 2,
             type: 'reminder',
             status: 'pending',
             payload: {
@@ -117,8 +112,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       processed: processedCount,
       timeMs: Date.now() - startTime
     });
-  } catch (error: any) {
-    console.error('Cron reminder error:', error);
-    return res.status(500).json({ error: 'Internal Server Error', details: error.message });
+  } catch {
+    console.error('notification_cron_failed');
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 }

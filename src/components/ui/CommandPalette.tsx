@@ -77,7 +77,10 @@ export const CommandPalette: React.FC = () => {
         const usersQ = query(usersRef, orderBy('email'), startAt(term), endAt(term + '\uf8ff'), limit(5));
         const shopsQ = query(shopsRef, orderBy('name'), startAt(term), endAt(term + '\uf8ff'), limit(5));
 
-        const [usersSnap, shopsSnap] = await Promise.all([getDocs(usersQ), getDocs(shopsQ)]);
+        const [usersSnap, shopsSnap] = await Promise.all([
+          getDocs(usersQ).catch(() => ({ docs: [] })), 
+          getDocs(shopsQ).catch(() => ({ docs: [] }))
+        ]);
         
         if (!isActive) return;
 

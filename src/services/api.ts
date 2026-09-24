@@ -9,57 +9,69 @@ export class ApiError extends Error {
   }
 }
 
-async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
+export interface CreateAppointmentInput {
+  barbershopId: string;
+  professionalId: string;
+  serviceId: string;
+  date: string;
+  startTime: string;
+  /** Stable identifier for this booking attempt. Auto-generated if omitted. Used for idempotency on retry. */
+  requestId?: string;
+  manualContact?: { name: string; phone: string; email?: string };
+}
+
+export type AppointmentStatusChange = 'confirmed' | 'cancelled' | 'completed' | 'absent';
+export interface AppointmentCommandResult {
+  success: true;
+  id: string;
+  status: 'pending' | AppointmentStatusChange;
+  notificationStatus: 'queued' | 'skipped';
+}
+
+const sessionMessage = 'Tu sesión expiró. Iniciá sesión nuevamente.';
+const requestMessage = 'No pudimos procesar la solicitud. Intentá nuevamente.';
+
+async function postCommand(endpoint: string, payload: unknown): Promise<AppointmentCommandResult> {
   const currentUser = auth.currentUser;
   if (!currentUser) {
-    throw new Error('User not authenticated');
+    throw new ApiError(401, sessionMessage);
   }
 
-  const token = await currentUser.getIdToken();
-  
-  const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,
-    ...options.headers,
-  };
-
-  const response = await fetch(endpoint, {
-    ...options,
-    headers,
-  });
-
-  const data = await response.json();
-
+  let token: string;
+  try {
+    token = await currentUser.getIdToken();
+  } catch {
+    throw new ApiError(401, sessionMessage);
+  }
+  let response: Response;
+  try {
+    response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new ApiError(0, 'No pudimos conectar. Revisá tu conexión e intentá nuevamente.');
+  }
+  const data = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new ApiError(response.status, data.error || 'API Request failed');
+    const message = response.status === 401 ? sessionMessage
+      : response.status === 403 ? 'No tenés permiso para realizar esta acción.'
+      : data?.error === 'SLOT_TAKEN' ? 'SLOT_TAKEN'
+      : requestMessage;
+    throw new ApiError(response.status, message);
   }
 
-  return data;
+  if (!data || typeof data !== 'object') throw new ApiError(502, requestMessage);
+  return data as AppointmentCommandResult;
 }
 
 export const appointmentApi = {
-  create: async (payload: any) => {
-    const res = await fetchWithAuth('/api/create-appointment', {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    });
-    // Trigger dispatch asynchronously for Hobby plans
-    fetchWithAuth('/api/dispatch-outbox', { 
-      method: 'POST',
-      body: JSON.stringify({ shopId: payload.barbershopId })
-    }).catch(() => {});
-    return res;
+  create: (payload: CreateAppointmentInput) => {
+    // Attach a stable requestId for idempotency; preserve caller-provided value across retries.
+    const requestId = payload.requestId ?? crypto.randomUUID();
+    return postCommand('/api/create-appointment', { ...payload, requestId });
   },
-  
-  update: async (barbershopId: string, appointmentId: string, status: string) => {
-    const res = await fetchWithAuth('/api/update-appointment', {
-      method: 'POST',
-      body: JSON.stringify({ barbershopId, appointmentId, status })
-    });
-    fetchWithAuth('/api/dispatch-outbox', { 
-      method: 'POST',
-      body: JSON.stringify({ shopId: barbershopId })
-    }).catch(() => {});
-    return res;
-  }
+  update: (barbershopId: string, appointmentId: string, status: AppointmentStatusChange) =>
+    postCommand('/api/update-appointment', { barbershopId, appointmentId, status }),
 };

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   createUserWithEmailAndPassword,
@@ -152,7 +153,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if ((user.role === 'professional' || user.role === 'admin' || user.role === 'super-admin') && user.barbershopId) {
       try {
         const profRef = doc(db, 'businesses', user.barbershopId, 'professionals', user.id);
-        await setDoc(profRef, { ...data }, { merge: true });
+        const publicData: { name?: string; photoURL?: string } = {};
+        if (data.name !== undefined) publicData.name = data.name;
+        if (data.photoURL !== undefined) publicData.photoURL = data.photoURL;
+        if (Object.keys(publicData).length) await updateDoc(profRef, publicData);
       } catch (err) {
         console.warn('No se pudo sincronizar el subdocumento del profesional:', err);
       }

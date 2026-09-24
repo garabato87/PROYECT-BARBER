@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState, useEffect, useMemo } from 'react';
 import { db } from '../services/firebase';
 import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';

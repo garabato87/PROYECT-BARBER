@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { Plus, Trash2, User, X, Loader2, Mail, Edit2, Camera } from 'lucide-react';
+import { Plus, Trash2, User, X, Loader2, Edit2, Camera } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { collection, onSnapshot, updateDoc, deleteDoc, doc, query, where, getDocs, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, updateDoc, doc } from 'firebase/firestore';
+import { manageProfessional } from '../services/professionals';
 import { db } from '../services/firebase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
@@ -18,7 +19,6 @@ interface WorkingDay {
 interface Professional {
   id?: string;
   name: string;
-  email: string;
   photoURL?: string;
   isActive?: boolean;
   workingDays?: Record<number, WorkingDay>;
@@ -92,59 +92,17 @@ const ProfesionalesPage: React.FC = () => {
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!shopId || !email.trim()) return;
+    if (!shopId || !email.trim() || isSubmitting) return;
 
     setIsSubmitting(true);
     setErrorMsg('');
 
     try {
-      const q = query(collection(db, 'users'), where('email', '==', email.trim().toLowerCase()));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        setErrorMsg('No se encontró ningún usuario con ese email. El barbero debe registrarse primero en la app.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      const proDoc = querySnapshot.docs[0];
-      const proData = proDoc.data();
-      const proId = proDoc.id;
-
-      if (proData.barbershopId && proData.barbershopId !== shopId) {
-        setErrorMsg('Este usuario ya pertenece a otro local.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (profesionales.some(p => p.id === proId)) {
-        setErrorMsg('Este profesional ya está en tu equipo.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Preserve admin/super-admin role, only upgrade 'client' to 'professional'
-      const newRole = (proData.role === 'admin' || proData.role === 'super-admin') 
-        ? proData.role 
-        : 'professional';
-
-      await updateDoc(doc(db, 'users', proId), {
-        role: newRole,
-        barbershopId: shopId
-      });
-
-      await setDoc(doc(db, 'businesses', shopId, 'professionals', proId), {
-        name: proData.name || 'Sin nombre',
-        email: proData.email,
-        photoURL: proData.photoURL || '',
-        isActive: true,
-        workingDays: DEFAULT_WORKING_DAYS
-      });
+      await manageProfessional({ action: 'assign', barbershopId: shopId, email: email.trim() });
 
       handleCloseModal();
     } catch (error) {
-      console.error("Error adding professional:", error);
-      setErrorMsg("Hubo un error al agregar el profesional. Verifica que tengas permisos.");
+      setErrorMsg(error instanceof Error ? error.message : 'No se pudo actualizar el equipo.');
     } finally {
       setIsSubmitting(false);
     }
@@ -152,13 +110,9 @@ const ProfesionalesPage: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (!shopId) return;
-    if (window.confirm('¿Estás seguro de que deseas eliminar este profesional de tu equipo? (Su cuenta volverá a ser de Cliente)')) {
+    if (window.confirm('¿Querés quitar este profesional del equipo? Los profesionales vuelven a ser clientes; tu rol de administrador se conserva.')) {
       try {
-        await updateDoc(doc(db, 'users', id), {
-          role: 'client',
-          barbershopId: null
-        });
-        await deleteDoc(doc(db, 'businesses', shopId, 'professionals', id));
+        await manageProfessional({ action: 'remove', barbershopId: shopId, professionalId: id });
         success('Profesional eliminado de tu equipo');
       } catch (error) {
         console.error("Error deleting professional:", error);
@@ -277,10 +231,6 @@ const ProfesionalesPage: React.FC = () => {
                     
                     <div className="flex-1 min-w-0">
                       <h4 className="font-heading text-xl font-bold text-foreground truncate capitalize">{pro.name}</h4>
-                      <div className="flex items-center gap-1.5 text-text-muted text-sm mt-0.5 truncate">
-                        <Mail size={14} className="shrink-0" />
-                        <span className="truncate">{pro.email}</span>
-                      </div>
                     </div>
                   </div>
 

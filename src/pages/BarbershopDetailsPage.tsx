@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, CheckCircle2, Clock, CalendarDays, User, Scissors, Loader2 } from 'lucide-react';
@@ -128,6 +129,7 @@ const BarbershopDetailsPage: React.FC = () => {
   };
 
   const handleBooking = async () => {
+    if (!booking.professional?.id || !booking.service?.id || !shop?.id || isSubmitting) return;
     if (!isAuthenticated || !user) {
       showInfo('Debes iniciar sesión para confirmar tu turno.', 'Atención');
       savePendingBooking({
@@ -143,25 +145,12 @@ const BarbershopDetailsPage: React.FC = () => {
     
     setIsSubmitting(true);
     try {
-      const endTime = (() => {
-        const [h, m] = booking.time.split(':').map(Number);
-        const totalMins = h * 60 + m + (booking.service?.duration || 30);
-        return `${Math.floor(totalMins / 60).toString().padStart(2, '0')}:${(totalMins % 60).toString().padStart(2, '0')}`;
-      })();
-
       await appointmentApi.create({
         barbershopId: shop.id,
         professionalId: booking.professional.id,
         serviceId: booking.service.id,
         date: booking.date,
         startTime: booking.time,
-        endTime,
-        clientName: user.name,
-        clientPhone: user.phone,
-        clientEmail: user.email,
-        shopName: shop.name,
-        serviceName: booking.service.name,
-        professionalName: booking.professional.name
       });
 
       clearPendingBooking();

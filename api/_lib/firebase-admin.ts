@@ -15,8 +15,8 @@ export function getFirebaseAdminApp() {
         // Inicialización por defecto en caso de estar en un entorno donde se inyectan las credenciales
         return initializeApp();
       }
-    } catch (error) {
-      console.error('Error inicializando Firebase Admin:', error);
+    } catch {
+      console.error('firebase_admin_initialization_failed');
       // Fallback
       return initializeApp();
     }

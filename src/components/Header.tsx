@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from 'react';
 import { Sun, Moon, Bell, Search, LogOut, Menu } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';

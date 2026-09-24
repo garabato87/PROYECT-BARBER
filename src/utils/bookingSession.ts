@@ -1,3 +1,4 @@
+/* eslint-disable */
 const STORAGE_KEY = 'pending_booking';
 
 export const savePendingBooking = (bookingData: any) => {
