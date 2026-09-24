@@ -45,7 +45,7 @@ const ClientDashboardPage: React.FC = () => {
   const confirmCancel = async () => {
     if (!appToCancel) return;
       try {
-        await appointmentApi.update(appToCancel.barbershopId, appToCancel.id!, 'cancelled');
+        await appointmentApi.update(appToCancel.barbershopId!, appToCancel.id!, 'cancelled');
 
         success('Turno cancelado exitosamente');
         setAppToCancel(null);
