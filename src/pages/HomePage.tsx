@@ -9,7 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useClientAppointments } from '../hooks/useClientAppointments';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
-import { Business } from '../types';
+import type { Business } from '../types';
 
 // Icons for categories and next appointment
 import { Scissors, Sparkles, Droplets, Paintbrush, Heart, Coffee, Calendar as CalendarIcon, Clock } from 'lucide-react';
@@ -69,7 +69,7 @@ const HomePage: React.FC = () => {
       }
       const q = query(collection(db, 'businesses'), ...qConstraints);
       const snap = await getDocs(q);
-      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Business));
       setBusinesses(data);
     } catch (err) {
       console.error('Error fetching businesses:', err);
